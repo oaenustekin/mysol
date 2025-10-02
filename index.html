@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysol</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: #050505;
+            color: #fff;
+            font-family: 'arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #time-text{
+            font-size: 20px;
+        }
+        #time-value{
+            margin-top: 5px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <p id="time-text">Geçen Süre:</p>
+        <div id="time">
+            <p id="time-value">00:00:00</p>
+        </div>
+    </div>
+    <script>
+        function updateElapsedTime() {
+            const startDate = new Date("2025-05-21T00:00:00");
+            const now = new Date();
+            const diffInMs = now - startDate;
+            const totalSeconds = Math.floor(diffInMs / 1000);
+            const days = Math.floor(totalSeconds / (60 * 60 * 24));
+            const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);
+            const formatted = `${days} gün ${String(hours).padStart(2, '0')} saat`;
+            document.getElementById("time").innerHTML = `<p id="time-value">${formatted}</p>`;
+        }
+        setInterval(updateElapsedTime, 1000);
+        updateElapsedTime();
+    </script>
+</body>
+</html>
