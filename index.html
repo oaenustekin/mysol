@@ -11,44 +11,47 @@
             box-sizing: border-box;
         }
         body{
-            background-color: #050505;
-            color: #fff;
+            background-color: black;
+            color: white;
             font-family: 'arial', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        #time-text{
-            font-size: 20px;
-        }
-        #time-value{
-            margin-top: 5px;
-            font-size: 24px;
-            font-weight: bold;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
-    <div>
-        <p id="time-text">Geçen Süre:</p>
-        <div id="time">
-            <p id="time-value">00:00:00</p>
+    <div class="w-full h-screen flex justify-center items-center">
+        <div>
+            <p class="text-xl text-gray-300">Geçen Süre:</p>
+            <div id="time1">
+                <p id="time1-value" class="text-2xl font-bold text-gray-300">00 gün 00 saat</p>
+            </div>
+        </div>
+    </div>
+    <div class="w-full h-screen flex justify-center items-center">
+        <div>
+            <p class="text-xl text-gray-300">Geçen Süre:</p>
+            <div id="time2">
+                <p id="time2-value" class="text-2xl font-bold text-gray-300">00 gün 00 saat</p>
+            </div>
         </div>
     </div>
     <script>
-        function updateElapsedTime() {
-            const startDate = new Date("2025-05-21T00:00:00");
+        function formatElapsed(start) {
             const now = new Date();
-            const diffInMs = now - startDate;
+            const diffInMs = now - start;
             const totalSeconds = Math.floor(diffInMs / 1000);
             const days = Math.floor(totalSeconds / (60 * 60 * 24));
             const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);
-            const formatted = `${days} gün ${String(hours).padStart(2, '0')} saat`;
-            document.getElementById("time").innerHTML = `<p id="time-value">${formatted}</p>`;
+            return `${days} gün ${String(hours).padStart(2, '0')} saat`;
         }
-        setInterval(updateElapsedTime, 1000);
-        updateElapsedTime();
+        function updateElapsedTimes() {
+            const start1 = new Date("2025-11-11T12:19:00");
+            const start2 = new Date("2025-05-21T00:00:00");
+            document.getElementById("time1-value").textContent = formatElapsed(start1);
+            document.getElementById("time2-value").textContent = formatElapsed(start2);
+        }
+        setInterval(updateElapsedTimes, 1000);
+        updateElapsedTimes();
     </script>
 </body>
 </html>
