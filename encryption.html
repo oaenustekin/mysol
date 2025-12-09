@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysol</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: black; color: white; font-family: 'arial', sans-serif; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body>
+<div class="w-full h-screen snap-y snap-mandatory overflow-y-auto">
+
+    <!-- 1. KISIM — ENCRYPT -->
+    <div class="w-full h-screen flex flex-col justify-center items-center gap-4 p-4 snap-start">
+        <h1 class="text-3xl font-bold mb-4">🔐 Mesaj Şifrele</h1>
+
+        <input id="encPass" type="password" placeholder="Parola"
+               class="w-80 p-3 bg-neutral-900 border border-neutral-700 rounded">
+
+        <textarea id="encMsg" placeholder="Mesaj..."
+                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+
+        <button onclick="encryptMessage()"
+                class="px-6 py-3 bg-blue-600 rounded hover:bg-blue-500">Şifrele</button>
+
+        <textarea id="encOutput" readonly placeholder="Şifreli veri burada..."
+                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+    </div>
+
+
+    <!-- 2. KISIM — DECRYPT -->
+    <div class="w-full h-screen flex flex-col justify-center items-center gap-4 p-4 snap-start">
+        <h1 class="text-3xl font-bold mb-4">🔓 Mesaj Çöz</h1>
+
+        <input id="decPass" type="password" placeholder="Parola"
+               class="w-80 p-3 bg-neutral-900 border border-neutral-700 rounded">
+
+        <textarea id="decInput" placeholder="Şifreli veri..."
+                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+
+        <button onclick="decryptMessage()"
+                class="px-6 py-3 bg-green-600 rounded hover:bg-green-500">Çöz</button>
+
+        <textarea id="decOutput" readonly placeholder="Çözülen mesaj..."
+                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+    </div>
+
+</div>
+
+<script>
+/* UTF-8 <-> Buffer dönüşümleri */
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+/* AES Key üret */
+async function deriveKey(password, salt) {
+    const baseKey = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt,
+            iterations: 500000,
+            hash: "SHA-256",
+        },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+/* ========== ENCRYPT ========== */
+async function encryptMessage() {
+    const pass = document.getElementById("encPass").value;
+    const message = document.getElementById("encMsg").value;
+
+    if (!pass || !message) {
+        alert("Parola ve mesaj boş olamaz.");
+        return;
+    }
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv   = crypto.getRandomValues(new Uint8Array(12));
+
+    const key = await deriveKey(pass, salt);
+    const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        key,
+        enc.encode(message)
+    );
+
+    const packed = btoa(
+        JSON.stringify({
+            salt: Array.from(salt),
+            iv: Array.from(iv),
+            data: Array.from(new Uint8Array(encrypted))
+        })
+    );
+
+    document.getElementById("encOutput").value = packed;
+}
+
+
+/* ========== DECRYPT ========== */
+async function decryptMessage() {
+    const pass = document.getElementById("decPass").value;
+    const packed = document.getElementById("decInput").value;
+
+    if (!pass || !packed) {
+        alert("Parola ve şifreli veri boş olamaz.");
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(atob(packed));
+
+        const salt = new Uint8Array(parsed.salt);
+        const iv   = new Uint8Array(parsed.iv);
+        const data = new Uint8Array(parsed.data);
+
+        const key = await deriveKey(pass, salt);
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv },
+            key,
+            data
+        );
+
+        document.getElementById("decOutput").value = dec.decode(decrypted);
+    } catch (err) {
+        document.getElementById("decOutput").value = "❌ Parola yanlış veya veri bozuk.";
+    }
+}
+</script>
+
+</body>
+</html>
