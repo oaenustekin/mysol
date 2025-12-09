@@ -20,20 +20,17 @@
 </head>
 <body>
     <div class="w-full h-screen snap-y snap-mandatory overflow-y-auto">
-        <div class="w-full h-screen flex justify-center items-center snap-start snap-always">
+        <div class="w-full h-screen flex flex-col justify-between items-center snap-start snap-always">
+            <div class="h-16">
+            </div>
             <div>
                 <p class="text-xl text-gray-300">Geçen Süre:</p>
                 <div id="time1">
                     <p id="time1-value" class="text-2xl font-bold text-gray-300">00 gün 00 saat</p>
                 </div>
             </div>
-        </div>
-        <div class="w-full h-screen flex justify-center items-center snap-start snap-always">
-            <div>
-                <p class="text-xl text-gray-300">Geçen Süre:</p>
-                <div id="time2">
-                    <p id="time2-value" class="text-2xl font-bold text-gray-300">00 gün 00 saat</p>
-                </div>
+            <div class="h-16">
+                <a href="encryption.html">Şifreli Mesaj</a>
             </div>
         </div>
     </div>
@@ -47,10 +44,8 @@
             return `${days} gün ${String(hours).padStart(2, '0')} saat`;
         }
         function updateElapsedTimes() {
-            const start1 = new Date("2025-11-11T12:19:00");
-            const start2 = new Date("2025-05-21T00:00:00");
+            const start1 = new Date("2025-05-21T00:00:00");
             document.getElementById("time1-value").textContent = formatElapsed(start1);
-            document.getElementById("time2-value").textContent = formatElapsed(start2);
         }
         setInterval(updateElapsedTimes, 1000);
         updateElapsedTimes();
