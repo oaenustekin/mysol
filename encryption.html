@@ -3,143 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mysol</title>
+    <title>Mysol - Encryption & Decryption Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        glass: "rgba(255, 255, 255, 0.05)",
+                        glassBorder: "rgba(255, 255, 255, 0.1)",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: black; color: white; font-family: 'arial', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            height: 100svh;
+            overflow: hidden !important;
+        }
+
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: #6366f1;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-<div class="w-full h-screen snap-y snap-mandatory overflow-y-auto">
+<body class="min-h-screen w-full flex flex-col items-center justify-center relative selection:bg-indigo-500/30 p-4">
 
-    <!-- 1. KISIM — ENCRYPT -->
-    <div class="w-full h-screen flex flex-col justify-center items-center gap-4 p-4 snap-start">
-        <h1 class="text-3xl font-bold mb-4">🔐 Mesaj Şifrele</h1>
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-md md:max-w-2xl lg:max-w-4xl">
+        
+        <!-- Tabs -->
+        <div class="glass-panel rounded-full p-1.5 mb-6 md:mb-8 flex w-full max-w-xs md:max-w-sm mx-auto">
+            <button id="t-enc" onclick="tab(1)" class="flex-1 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 text-white bg-white/10 shadow-lg border border-white/5">
+                Encryption
+            </button>
+            <button id="t-dec" onclick="tab(0)" class="flex-1 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 text-zinc-400 hover:text-white">
+                Decryption
+            </button>
+        </div>
 
-        <input id="encPass" type="password" placeholder="Parola"
-               class="w-80 p-3 bg-neutral-900 border border-neutral-700 rounded">
+        <!-- Slider -->
+        <div class="glass-panel w-full rounded-3xl overflow-hidden relative border-t border-white/10 h-[600px] max-h-[85vh]">
+            <div id="slider" class="flex w-[200%] h-full transition-transform duration-500 ease-in-out">
+                
+                <!-- Enc Panel -->
+                <div class="w-1/2 h-full p-6 md:p-8 flex flex-col overflow-y-auto no-scrollbar">
+                    <div class="mb-6 flex-shrink-0">
+                        <h2 class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-300">Şifrele</h2>
+                    </div>
 
-        <textarea id="encMsg" placeholder="Mesaj..."
-                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+                    <div class="space-y-4 md:space-y-5 flex-1 flex flex-col min-h-0">
+                        <div class="flex-shrink-0">
+                            <label class="block text-[10px] md:text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Gizli Parola</label>
+                            <input type="password" id="p1" placeholder="Parola" class="input-field w-full rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600">
+                        </div>
 
-        <button onclick="encryptMessage()"
-                class="px-6 py-3 bg-blue-600 rounded hover:bg-blue-500">Şifrele</button>
+                        <div class="flex-1 flex flex-col min-h-[120px]">
+                            <label class="block text-[10px] md:text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Mesaj</label>
+                            <textarea id="msg" placeholder="Metin..." class="input-field w-full flex-1 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 resize-none"></textarea>
+                        </div>
 
-        <textarea id="encOutput" readonly placeholder="Şifreli veri burada..."
-                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+                        <button onclick="enc()" class="flex-shrink-0 group relative w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-indigo-500/25 active:scale-[0.98]">
+                            <span class="relative z-10 flex items-center justify-center gap-2">KİLİTLE</span>
+                        </button>
+
+                        <div id="out-g1" class="hidden opacity-0 transition-opacity duration-500 flex-shrink-0">
+                            <label class="block text-[10px] md:text-xs font-medium text-emerald-400 mb-1.5 uppercase tracking-wider">Çıktı</label>
+                            <textarea id="out1" readonly class="input-field w-full h-20 md:h-24 rounded-xl px-4 py-3 text-xs font-mono text-zinc-300 bg-black/20 resize-none border-emerald-500/30 focus:border-emerald-500/50" onclick="this.select()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dec Panel -->
+                <div class="w-1/2 h-full p-6 md:p-8 flex flex-col overflow-y-auto no-scrollbar">
+                    <div class="mb-6 flex-shrink-0">
+                        <h2 class="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-orange-300">Şifre Çöz</h2>
+                    </div>
+
+                    <div class="space-y-4 md:space-y-5 flex-1 flex flex-col min-h-0">
+                        <div class="flex-shrink-0">
+                            <label class="block text-[10px] md:text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Gizli Parola</label>
+                            <input type="password" id="p2" placeholder="Parola" class="input-field w-full rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600">
+                        </div>
+
+                        <div class="flex-1 flex flex-col min-h-[120px]">
+                            <label class="block text-[10px] md:text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Şifreli Veri</label>
+                            <textarea id="dat" placeholder="Base64..." class="input-field w-full flex-1 rounded-xl px-4 py-3 text-xs font-mono text-zinc-300 placeholder-zinc-600 resize-none"></textarea>
+                        </div>
+
+                        <button onclick="dec()" class="flex-shrink-0 group relative w-full rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-pink-500/25 active:scale-[0.98]">
+                            <span class="relative z-10 flex items-center justify-center gap-2">ÇÖZ</span>
+                        </button>
+
+                        <div id="out-g2" class="hidden opacity-0 transition-opacity duration-500 flex-shrink-0">
+                            <label class="block text-[10px] md:text-xs font-medium text-blue-400 mb-1.5 uppercase tracking-wider">Mesaj</label>
+                            <div id="out2" class="input-field w-full h-20 md:h-24 rounded-xl px-4 py-3 text-sm text-white overflow-y-auto bg-black/20 border-blue-500/30"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script>
+        const sl = document.getElementById('slider');
+        const b1 = document.getElementById('t-enc');
+        const b2 = document.getElementById('t-dec');
+        const g1 = document.getElementById('out-g1');
+        const g2 = document.getElementById('out-g2');
 
-    <!-- 2. KISIM — DECRYPT -->
-    <div class="w-full h-screen flex flex-col justify-center items-center gap-4 p-4 snap-start">
-        <h1 class="text-3xl font-bold mb-4">🔓 Mesaj Çöz</h1>
+        function tab(m) {
+            g1.classList.add('hidden'); g2.classList.add('hidden');
+            if (m === 1) {
+                sl.style.transform = 'translateX(0)';
+                b1.classList.replace('text-zinc-400','text-white'); b1.classList.add('bg-white/10','shadow-lg','border','border-white/5');
+                b2.classList.replace('text-white','text-zinc-400'); b2.classList.remove('bg-white/10','shadow-lg','border','border-white/5');
+            } else {
+                sl.style.transform = 'translateX(-50%)';
+                b2.classList.replace('text-zinc-400','text-white'); b2.classList.add('bg-white/10','shadow-lg','border','border-white/5');
+                b1.classList.replace('text-white','text-zinc-400'); b1.classList.remove('bg-white/10','shadow-lg','border','border-white/5');
+            }
+        }
 
-        <input id="decPass" type="password" placeholder="Parola"
-               class="w-80 p-3 bg-neutral-900 border border-neutral-700 rounded">
+        async function key(p, s) {
+            const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(p), "PBKDF2", false, ["deriveKey"]);
+            return crypto.subtle.deriveKey({name:"PBKDF2", salt:s, iterations:100000, hash:"SHA-256"}, k, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+        }
 
-        <textarea id="decInput" placeholder="Şifreli veri..."
-                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
+        async function enc() {
+            const p = document.getElementById('p1').value, m = document.getElementById('msg').value, o = document.getElementById('out1');
+            if (!p || !m) return alert("Eksik veri");
+            try {
+                const s = crypto.getRandomValues(new Uint8Array(16)), i = crypto.getRandomValues(new Uint8Array(12));
+                const k = await key(p, s), e = await crypto.subtle.encrypt({name:"AES-GCM", iv:i}, k, new TextEncoder().encode(m));
+                o.value = btoa(JSON.stringify({s:Array.from(s), i:Array.from(i), d:Array.from(new Uint8Array(e))}));
+                g1.classList.remove('hidden','opacity-0');
+            } catch { alert("Hata"); }
+        }
 
-        <button onclick="decryptMessage()"
-                class="px-6 py-3 bg-green-600 rounded hover:bg-green-500">Çöz</button>
-
-        <textarea id="decOutput" readonly placeholder="Çözülen mesaj..."
-                  class="w-80 h-40 p-3 bg-neutral-900 border border-neutral-700 rounded"></textarea>
-    </div>
-
-</div>
-
-<script>
-/* UTF-8 <-> Buffer dönüşümleri */
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-
-/* AES Key üret */
-async function deriveKey(password, salt) {
-    const baseKey = await crypto.subtle.importKey(
-        "raw",
-        enc.encode(password),
-        "PBKDF2",
-        false,
-        ["deriveKey"]
-    );
-    return crypto.subtle.deriveKey(
-        {
-            name: "PBKDF2",
-            salt,
-            iterations: 500000,
-            hash: "SHA-256",
-        },
-        baseKey,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["encrypt", "decrypt"]
-    );
-}
-
-/* ========== ENCRYPT ========== */
-async function encryptMessage() {
-    const pass = document.getElementById("encPass").value;
-    const message = document.getElementById("encMsg").value;
-
-    if (!pass || !message) {
-        alert("Parola ve mesaj boş olamaz.");
-        return;
-    }
-
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv   = crypto.getRandomValues(new Uint8Array(12));
-
-    const key = await deriveKey(pass, salt);
-    const encrypted = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        key,
-        enc.encode(message)
-    );
-
-    const packed = btoa(
-        JSON.stringify({
-            salt: Array.from(salt),
-            iv: Array.from(iv),
-            data: Array.from(new Uint8Array(encrypted))
-        })
-    );
-
-    document.getElementById("encOutput").value = packed;
-}
-
-
-/* ========== DECRYPT ========== */
-async function decryptMessage() {
-    const pass = document.getElementById("decPass").value;
-    const packed = document.getElementById("decInput").value;
-
-    if (!pass || !packed) {
-        alert("Parola ve şifreli veri boş olamaz.");
-        return;
-    }
-
-    try {
-        const parsed = JSON.parse(atob(packed));
-
-        const salt = new Uint8Array(parsed.salt);
-        const iv   = new Uint8Array(parsed.iv);
-        const data = new Uint8Array(parsed.data);
-
-        const key = await deriveKey(pass, salt);
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv },
-            key,
-            data
-        );
-
-        document.getElementById("decOutput").value = dec.decode(decrypted);
-    } catch (err) {
-        document.getElementById("decOutput").value = "❌ Parola yanlış veya veri bozuk.";
-    }
-}
-</script>
-
+        async function dec() {
+            const p = document.getElementById('p2').value, d = document.getElementById('dat').value, o = document.getElementById('out2');
+            o.textContent = ""; o.classList.remove('text-red-400');
+            if (!p || !d) return alert("Eksik veri");
+            try {
+                const j = JSON.parse(atob(d)), s = new Uint8Array(j.s), i = new Uint8Array(j.i), dt = new Uint8Array(j.d);
+                const k = await key(p, s), r = await crypto.subtle.decrypt({name:"AES-GCM", iv:i}, k, dt);
+                o.textContent = new TextDecoder().decode(r);
+                g2.classList.remove('hidden','opacity-0');
+            } catch {
+                g2.classList.remove('hidden','opacity-0');
+                o.textContent = "Hatalı parola/veri"; o.classList.add('text-red-400');
+            }
+        }
+    </script>
 </body>
 </html>
