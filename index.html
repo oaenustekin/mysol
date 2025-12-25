@@ -1,54 +1,324 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mysol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body,
+        html {
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
         }
-        body{
-            background-color: black;
-            color: white;
-            font-family: 'arial', sans-serif;
+
+        .ambient-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 120%, rgba(236, 72, 153, 0.15), rgba(0, 0, 0, 0) 60%),
+                radial-gradient(circle at 10% 20%, rgba(76, 29, 149, 0.1), rgba(0, 0, 0, 0) 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        #slider-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+        }
+
+        #slider-track {
+            display: flex;
+            height: 100%;
+            width: 300%;
+            will-change: transform;
+        }
+
+        .slide {
+            width: 33.333333%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .slide-content {
+            transform: scale(0.9);
+            opacity: 0.3;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        #slider-track .slide:nth-child(2) .slide-content {
+            transform: scale(1);
+            opacity: 1;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-    <div class="w-full h-screen snap-y snap-mandatory overflow-y-auto">
-        <div class="w-full h-screen flex flex-col justify-between items-center snap-start snap-always">
-            <div class="h-16">
-            </div>
-            <div>
-                <p class="text-xl text-gray-300">Geçen Süre:</p>
-                <div id="time1">
-                    <p id="time1-value" class="text-2xl font-bold text-gray-300">00 gün 00 saat</p>
-                </div>
-            </div>
-            <div class="h-16">
-                <a href="encryption.html">Şifreli Mesaj</a>
+
+<body class="text-white selection:bg-pink-900 selection:text-white">
+
+    <div class="ambient-glow"></div>
+
+    <div class="relative z-10 w-full h-full flex flex-col justify-between py-10 pb-16 px-6">
+
+        <div class="text-center space-y-3 glass-panel p-6 rounded-3xl mx-2 shadow-2xl shadow-black/50">
+            <h2 class="text-[0.65rem] font-bold tracking-[0.4em] uppercase text-white/30">Mysol</h2>
+            <div class="flex items-center justify-center gap-3">
+                <i class="ri-heart-3-fill text-pink-700 animate-pulse text-xl"></i>
+                <span class="text-sm font-medium tracking-[0.2em] text-white/80 font-mono">21.05.2025</span>
+                <i class="ri-heart-3-fill text-pink-700 animate-pulse text-xl"></i>
             </div>
         </div>
+
+        <div class="flex-1 w-full relative" id="slider-container">
+            <div id="slider-track">
+            </div>
+
+            <div class="absolute inset-y-0 left-0 w-12 z-20 cursor-w-resize md:block hidden" onclick="prevSlide()">
+            </div>
+            <div class="absolute inset-y-0 right-0 w-12 z-20 cursor-e-resize md:block hidden" onclick="nextSlide()">
+            </div>
+        </div>
+
+        <div class="glass-panel mx-auto px-10 py-5 rounded-full flex items-center justify-center gap-6 shadow-2xl">
+            <div class="w-1.5 h-1.5 rounded-full bg-pink-700 shadow-[0_0_15px_#be185d]"></div>
+            <span id="current-label"
+                class="text-sm uppercase tracking-[0.3em] font-semibold text-pink-100 min-w-[80px] text-center">...</span>
+            <div class="w-1.5 h-1.5 rounded-full bg-pink-700 shadow-[0_0_15px_#be185d]"></div>
+        </div>
     </div>
+
     <script>
-        function formatElapsed(start) {
+        const CONFIG = {
+            startDate: new Date('2025-05-21T00:00:00'),
+            metrics: [
+                { id: 'days', label: 'Gün' },
+                { id: 'weeks', label: 'Hafta' },
+                { id: 'months', label: 'Ay' },
+                { id: 'hours', label: 'Saat' },
+                { id: 'minutes', label: 'Dakika' },
+                { id: 'seconds', label: 'Saniye' }
+            ]
+        };
+
+        const state = {
+            index: 0,
+            isDragging: false,
+            isAnimating: false,
+            startX: 0,
+            startTime: 0,
+            currentTranslate: -33.3333,
+            rafID: 0
+        };
+
+        const els = {
+            track: document.getElementById('slider-track'),
+            container: document.getElementById('slider-container'),
+            label: document.getElementById('current-label')
+        };
+
+        function getMetrics() {
             const now = new Date();
-            const diffInMs = now - start;
-            const totalSeconds = Math.floor(diffInMs / 1000);
-            const days = Math.floor(totalSeconds / (60 * 60 * 24));
-            const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);
-            return `${days} gün ${String(hours).padStart(2, '0')} saat`;
+            let diff = now - CONFIG.startDate;
+            if (diff < 0) diff = 0;
+
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const weeks = Math.floor(days / 7);
+            const months = (days / 30.437).toFixed(1);
+
+            return {
+                days: days.toLocaleString('tr-TR'),
+                weeks: weeks.toLocaleString('tr-TR').replace(',', '.'),
+                months: months.replace('.', ','),
+                hours: hours.toLocaleString('tr-TR'),
+                minutes: minutes.toLocaleString('tr-TR'),
+                seconds: seconds.toLocaleString('tr-TR')
+            };
         }
-        function updateElapsedTimes() {
-            const start1 = new Date("2025-05-21T00:00:00");
-            document.getElementById("time1-value").textContent = formatElapsed(start1);
+
+        function getMetricObj(i) {
+            const len = CONFIG.metrics.length;
+            return CONFIG.metrics[((i % len) + len) % len];
         }
-        setInterval(updateElapsedTimes, 1000);
-        updateElapsedTimes();
+
+        function generateSlide(metric, value) {
+            return `
+                <div class="slide">
+                    <div class="slide-content text-center">
+                        <div class="text-[5.5rem] md:text-[8rem] font-bold text-white leading-none tracking-tighter drop-shadow-2xl font-[Outfit]">
+                            ${value}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDOM() {
+            const m = getMetrics();
+            const prev = getMetricObj(state.index - 1);
+            const curr = getMetricObj(state.index);
+            const next = getMetricObj(state.index + 1);
+
+            els.track.innerHTML =
+                generateSlide(prev, m[prev.id]) +
+                generateSlide(curr, m[curr.id]) +
+                generateSlide(next, m[next.id]);
+
+            els.label.textContent = curr.label;
+        }
+
+        function updateValuesSafe() {
+            if (state.isAnimating || state.isDragging) return;
+
+            const m = getMetrics();
+            const slides = els.track.children;
+
+            if (slides.length === 3) {
+                const prevID = getMetricObj(state.index - 1).id;
+                const currID = getMetricObj(state.index).id;
+                const nextID = getMetricObj(state.index + 1).id;
+
+                slides[0].querySelector('.text-white').textContent = m[prevID] || '0';
+                slides[1].querySelector('.text-white').textContent = m[currID] || '0';
+                slides[2].querySelector('.text-white').textContent = m[nextID] || '0';
+            }
+        }
+
+        function handleStart(e) {
+            if (state.isAnimating) return;
+            state.isDragging = true;
+            state.startX = getX(e);
+            state.startTime = Date.now();
+
+            els.track.style.transition = 'none';
+            state.rafID = requestAnimationFrame(animationLoop);
+        }
+
+        function handleMove(e) {
+            if (!state.isDragging) return;
+
+            const currentX = getX(e);
+            const pixelDiff = currentX - state.startX;
+            const containerWidth = els.container.offsetWidth;
+            const percentMove = (pixelDiff / containerWidth) * 100;
+
+            state.currentTranslate = -33.3333 + (percentMove / 3);
+        }
+
+        function handleEnd(e) {
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            cancelAnimationFrame(state.rafID);
+
+            const endX = e.changedTouches ? e.changedTouches[0].clientX : e.pageX;
+            const diff = endX - state.startX;
+            const timeDiff = Date.now() - state.startTime;
+
+            const velocity = Math.abs(diff / timeDiff);
+            const isFlick = velocity > 0.3 && timeDiff < 300;
+
+            const moved = state.currentTranslate - (-33.3333);
+            const limit = 5;
+
+            if ((moved < -limit) || (diff < 0 && isFlick)) {
+                finishSlide(-66.6666, 1);
+            } else if ((moved > limit) || (diff > 0 && isFlick)) {
+                finishSlide(0, -1);
+            } else {
+                finishSlide(-33.3333, 0);
+            }
+        }
+
+        function finishSlide(target, direction) {
+            state.isAnimating = true;
+
+            els.track.style.transform = `translate3d(${state.currentTranslate}%, 0, 0)`;
+            void els.track.offsetWidth;
+
+            requestAnimationFrame(() => {
+                els.track.style.transition = 'transform 0.5s cubic-bezier(0.2, 1, 0.3, 1)';
+                els.track.style.transform = `translate3d(${target}%, 0, 0)`;
+            });
+
+            const safetyTimer = setTimeout(() => {
+                onTransitionEnd();
+            }, 600);
+
+            let hasRun = false;
+            const onTransitionEnd = () => {
+                if (hasRun) return;
+                hasRun = true;
+
+                els.track.style.transition = 'none';
+                clearTimeout(safetyTimer);
+
+                if (direction !== 0) {
+                    state.index += direction;
+                    renderDOM();
+                }
+
+                els.track.style.transform = `translate3d(-33.3333%, 0, 0)`;
+                void els.track.offsetWidth;
+
+                state.isAnimating = false;
+                state.currentTranslate = -33.3333;
+            };
+
+            els.track.addEventListener('transitionend', onTransitionEnd, { once: true });
+        }
+
+        function animationLoop() {
+            els.track.style.transform = `translate3d(${state.currentTranslate}%, 0, 0)`;
+            if (state.isDragging) requestAnimationFrame(animationLoop);
+        }
+
+        function getX(e) {
+            return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        window.prevSlide = () => { if (!state.isAnimating) finishSlide(0, -1); };
+        window.nextSlide = () => { if (!state.isAnimating) finishSlide(-66.6666, 1); };
+
+        els.track.style.transform = `translate3d(-33.3333%, 0, 0)`;
+
+        renderDOM();
+        setInterval(updateValuesSafe, 1000);
+
+        const c = els.container;
+        c.addEventListener('touchstart', handleStart, { passive: true });
+        c.addEventListener('touchend', handleEnd);
+        c.addEventListener('touchmove', handleMove, { passive: true });
+        c.addEventListener('mousedown', handleStart);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('mousemove', handleMove);
+
     </script>
 </body>
+
 </html>
