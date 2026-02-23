@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Countdown</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;background:#000;color:#fff;font-family:system-ui,Arial;display:flex;align-items:center;justify-content:center;padding:5vw;text-align:center}
+#c{font-weight:700;font-size:clamp(28px,8vw,80px);line-height:1.2}
+</style>
+</head>
+<body>
+<div id="c"></div>
+<script>
+let t=new Date("2027-09-18T00:00:00Z").getTime(),e=document.getElementById("c");
+function r(){let d=Math.floor((t-Date.now())/86400000);e.textContent=d>0?d+" gün kaldı":"Başladı"}
+r();setInterval(r,1000);
+</script>
+</body>
+</html>
